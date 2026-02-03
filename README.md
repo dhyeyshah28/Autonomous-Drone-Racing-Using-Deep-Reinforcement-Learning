@@ -1,13 +1,9 @@
-# ese6510-autonomous-drone-racing-deep-rl
-ESE 6510 Final Project — Physical Intelligence
+# 🏁 Autonomous-Drone-Racing-Using-Deep-Reinforcement-Learning
 
-# 🏁 Autonomous Drone Racing via Deep Reinforcement Learning in Isaac Sim
-
-> **Description**: A high-speed quadcopter racing policy trained end-to-end using Proximal Policy Optimization (PPO) in NVIDIA Isaac Lab. The pipeline combines gate-aware progress rewards, multi-frame observations (world, body, and gate-relative coordinates), and domain randomization over thrust-to-weight ratio, aerodynamic coefficients, and PID gains to achieve robust sim-to-real transfer. A custom PPO implementation leverages GPU-optimised batching, adaptive KL-divergence learning rate scheduling, and clipped value loss for stable training. The final policy completes 3 laps around a fixed 8-gate circuit in 20.5 seconds, maintaining stability under significant dynamics variation and demonstrating competitive time-trial performance across randomised reset distributions.
+> **Description**: We trained an end-to-end high-speed quadcopter racing policy using Proximal Policy Optimization (PPO) in NVIDIA Isaac Lab. The pipeline combines gate-aware progress rewards, multi-frame observations (world, body, and gate-relative coordinates), and domain randomization over thrust-to-weight ratio, aerodynamic coefficients, and PID gains to achieve robust sim-to-real transfer. A custom PPO implementation leverages GPU-optimised batching, adaptive KL-divergence learning rate scheduling, and clipped value loss for stable training. The final policy completes 3 laps around a fixed 8-gate circuit in 20.5 seconds (hardware), maintaining stability under significant dynamics variation and demonstrating competitive time-trial performance across randomised reset distributions.
 
 [![Course](https://img.shields.io/badge/ESE%206510-Physical%20Intelligence-darkblue?style=for-the-badge)](https://github.com)
 [![Result](https://img.shields.io/badge/Lap%20Time-20.5s%20(3%20laps)-gold?style=for-the-badge)](https://github.com)
-[![Demo](https://img.shields.io/badge/Video-Demo%20Available-red?style=for-the-badge&logo=youtube)](https://youtu.be/demo-link)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.7.0-EE4C2C?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
 [![Isaac Sim](https://img.shields.io/badge/Isaac%20Sim-4.5-76B900?style=for-the-badge&logo=nvidia)](https://developer.nvidia.com/isaac-sim)
@@ -33,14 +29,11 @@ PPO Algorithm → Multi-Frame Observations → Gate-Aware Rewards → Domain Ran
   - [4. Reset Strategy](#4-reset-strategy)
   - [5. Domain Randomization](#5-domain-randomization)
 - [Performance Results](#-performance-results)
-- [Installation & Setup](#-installation--setup)
-- [Usage](#-usage)
 - [Repository Structure](#-repository-structure)
 - [Key Algorithms](#-key-algorithms)
-  - [1. PPO Surrogate Loss with Clipping](#1-ppo-surrogate-loss-with-clipping)
-  - [2. Gate-Passing Detection](#2-gate-passing-detection)
-  - [3. GAE (Generalized Advantage Estimation)](#3-gae-generalized-advantage-estimation)
-  - [4. Adaptive KL-Divergence Scheduling](#4-adaptive-kl-divergence-scheduling)
+  - [1. Gate-Passing Detection](#2-gate-passing-detection)
+  - [2. GAE (Generalized Advantage Estimation)](#3-gae-generalized-advantage-estimation)
+  - [3. Adaptive KL-Divergence Scheduling](#4-adaptive-kl-divergence-scheduling)
 - [What Did Not Work](#-what-did-not-work)
 - [Lessons Learned](#-lessons-learned)
 - [Future Improvements](#-future-improvements)
@@ -70,9 +63,8 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 **Course**: ESE 6510 — Physical Intelligence  
 **Institution**: University of Pennsylvania  
 **Semester**: Fall 2025  
-**Team**: Kartik Virmani, Dhyey Shah  
-**Simulator**: NVIDIA Isaac Sim 4.5 + Isaac Lab (custom fork)  
-**Hardware**: NVIDIA RTX 3090 / RTX 4090
+**Simulator**: NVIDIA Isaac Sim 4.5 + Isaac Lab   
+**Hardware**: NVIDIA RTX 3060 / RTX 4090
 
 ---
 
@@ -93,7 +85,6 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 
 ### 🎓 Advanced Techniques
 
-- Clipped value loss for critic stability (PPO-Clip variant)
 - Adaptive learning rate scaling via KL divergence monitoring
 - Generalized Advantage Estimation (GAE) with λ = 0.95
 - Entropy regularisation (coefficient = 0.005) for exploration
@@ -112,42 +103,42 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 ┌─────────────────────────────────────────────────────────────────────┐
 │                   FULL TRAINING PIPELINE                            │
 │                                                                     │
-│   ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌──────────┐  │
-│   │ ISAAC SIM  │   │ CRAZYFLIE  │   │  GATE      │   │ CONTACT  │  │
-│   │ 8192 ENVS  │──▶│ DYNAMICS   │──▶│ CIRCUIT    │──▶│ SENSORS  │  │
-│   │ (PARALLEL) │   │ (PID ctrl) │   │ (8 gates)  │   │          │  │
-│   └────────────┘   └────────────┘   └────────────┘   └─────┬────┘  │
+│   ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌──────────┐   │
+│   │ ISAAC SIM  │   │ CRAZYFLIE  │   │  GATE      │   │ CONTACT  │   │
+│   │ 8192 ENVS  │──▶│ DYNAMICS   │──▶│ CIRCUIT    │──▶│ SENSORS  │ │
+│   │ (PARALLEL) │   │ (PID ctrl) │   │ (8 gates)  │   │          │   │
+│   └────────────┘   └────────────┘   └────────────┘   └─────┬────┘   │
 │                                                             │       │
 │                                                             ▼       │
 │   ┌──────────────────────────────────────────────────────────────┐  │
 │   │                   OBSERVATION BUILDER                        │  │
 │   │                                                              │  │
-│   │   ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐  │  │
-│   │   │ WORLD FRAME  │  │ BODY FRAME   │  │ GATE-RELATIVE   │  │  │
-│   │   │  - Position  │  │  - Lin vel   │  │  - Gate pos (b) │  │  │
-│   │   │  - Euler     │  │  - Ang vel   │  │  - Direction    │  │  │
-│   │   │  - Quat      │  │              │  │  - Distance     │  │  │
-│   │   └──────────────┘  └──────────────┘  └─────────────────┘  │  │
+│   │   ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐    │  │
+│   │   │ WORLD FRAME  │  │ BODY FRAME   │  │ GATE-RELATIVE   │    │  │
+│   │   │  - Position  │  │  - Lin vel   │  │  - Gate pos (b) │    │  │
+│   │   │  - Euler     │  │  - Ang vel   │  │  - Direction    │    │  │
+│   │   │  - Quat      │  │              │  │  - Distance     │    │  │
+│   │   └──────────────┘  └──────────────┘  └─────────────────┘    │  │
 │   │                                                              │  │
-│   │   Output: 31D observation vector                            │  │
+│   │   Output: 31D observation vector                             │  │
 │   └──────────────────────────────┬───────────────────────────────┘  │
 │                                  │                                  │
 │                                  ▼                                  │
 │   ┌──────────────────────────────────────────────────────────────┐  │
 │   │                   PPO ACTOR-CRITIC                           │  │
 │   │                                                              │  │
-│   │   ┌──────────────────────────────────────────────────────┐  │  │
-│   │   │          ACTOR NETWORK (Policy πθ)                   │  │  │
-│   │   │                                                      │  │  │
-│   │   │   obs (31D) → MLP [256, 256, 128] → μ, σ (4D)       │  │  │
-│   │   │   Sample: a ~ N(μ, σ²)  (thrust commands)           │  │  │
-│   │   └──────────────────────────────────────────────────────┘  │  │
+│   │   ┌──────────────────────────────────────────────────────┐   │  │
+│   │   │          ACTOR NETWORK (Policy πθ)                   │   │  │
+│   │   │                                                      │   │  │
+│   │   │   obs (31D) → MLP [256, 256, 128] → μ, σ (4D)        │   │  │
+│   │   │   Sample: a ~ N(μ, σ²)  (thrust commands)            │   │  │
+│   │   └──────────────────────────────────────────────────────┘   │  │
 │   │                                                              │  │
-│   │   ┌──────────────────────────────────────────────────────┐  │  │
-│   │   │          CRITIC NETWORK (Value Vφ)                   │  │  │
-│   │   │                                                      │  │  │
-│   │   │   obs (31D) → MLP [256, 256, 128] → V(s)            │  │  │
-│   │   └──────────────────────────────────────────────────────┘  │  │
+│   │   ┌──────────────────────────────────────────────────────┐   │  │
+│   │   │          CRITIC NETWORK (Value Vφ)                   │   │  │
+│   │   │                                                      │   │  │
+│   │   │   obs (31D) → MLP [256, 256, 128] → V(s)             │   │  │
+│   │   └──────────────────────────────────────────────────────┘   │  │
 │   │                                                              │  │
 │   └──────────────────────────────┬───────────────────────────────┘  │
 │                                  │                                  │
@@ -155,21 +146,21 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 │   ┌──────────────────────────────────────────────────────────────┐  │
 │   │                   REWARD CALCULATOR                          │  │
 │   │                                                              │  │
-│   │   r(t) = wp·rprog + wv·rvel + wg·rgate + wh·rhead           │  │
+│   │   r(t) = wp·rprog + wv·rvel + wg·rgate + wh·rhead            │  │
 │   │        + wt·rtilt + wω·rang + wc·rcrash + wℓ·rlap            │  │
 │   │        + wb·rback + wspeed·rspeed                            │  │
 │   │                                                              │  │
 │   └──────────────────────────────┬───────────────────────────────┘  │
 │                                  │                                  │
-│                                  ▼                                  │
+│                                  ▼                                  │ 
 │   ┌──────────────────────────────────────────────────────────────┐  │
 │   │                   PPO UPDATE STEP                            │  │
 │   │                                                              │  │
-│   │   1. Collect rollouts (2048 steps × 8192 envs)              │  │
-│   │   2. Compute GAE advantages                                 │  │
-│   │   3. Mini-batch updates (4 batches × 5 epochs)              │  │
-│   │   4. Clip surrogate loss + value loss                       │  │
-│   │   5. Adaptive LR via KL divergence                          │  │
+│   │   1. Collect rollouts (2048 steps × 8192 envs)               │  │
+│   │   2. Compute GAE advantages                                  │  │
+│   │   3. Mini-batch updates (4 batches × 5 epochs)               │  │
+│   │   4. Clip surrogate loss + value loss                        │  │
+│   │   5. Adaptive LR via KL divergence                           │  │
 │   │                                                              │  │
 │   └──────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
@@ -566,11 +557,11 @@ This forces the policy to generalise across dynamics variations, improving real-
 
 | Phase          | Episode Reward | Gate Pass Rate | Training Time |
 |----------------|----------------|----------------|---------------|
-| Iterations 0–1000   | −50 → 150      | 0% → 30%       | ~30 min       |
-| Iterations 1000–2500 | 150 → 450      | 30% → 70%      | ~1 hr         |
-| Iterations 2500–5000 | 450 → 650      | 70% → 95%      | ~1.5 hrs      |
+| Iterations 0–1000   | −50 → 150      | 0% → 30%       | ~30 min  |
+| Iterations 1000–2500 | 150 → 450      | 30% → 70%      | ~1 hr   |
+| Iterations 2500–5000 | 450 → 650      | 70% → 95%      | ~2.5 hrs|
 
-**Total training time:** ~3 hours on RTX 4090 (8192 parallel environments)
+**Total training time:** ~3.5 hours on RTX 4090 (8192 parallel environments)
 
 ### Ablation Studies
 
@@ -588,145 +579,6 @@ This forces the policy to generalise across dynamics variations, improving real-
 - **Straightaway Speed Bonus Effect:** The policy visibly accelerates on long straight segments between distant gates.
 - **Robust to Reset Variation:** Randomised starting positions did not degrade performance — policy quickly re-oriented toward the first gate.
 - **Lap-Time Consistency:** Standard deviation across 50 evaluation runs: 0.8 s (highly consistent).
-
----
-
-## 🚀 Installation & Setup
-
-### Prerequisites
-
-```
-- Ubuntu 20.04 / 22.04 (recommended) or Windows 10/11
-- NVIDIA GPU with CUDA 12.8 support (RTX 3090 / 4090 recommended)
-- Python 3.10
-- Conda (for virtual environment)
-```
-
-### Step 1: Create Conda Environment
-
-```bash
-conda create -n env_isaaclab python=3.10
-conda activate env_isaaclab
-```
-
-### Step 2: Install PyTorch (CUDA 12.8)
-
-```bash
-pip install --upgrade pip
-pip install torch==2.7.0 torchvision==0.22.0 --index-url https://download.pytorch.org/whl/cu128
-```
-
-### Step 3: Install Isaac Sim (Pip Method)
-
-```bash
-pip install "isaacsim[all,extscache]==4.5.0" --extra-index-url https://pypi.nvidia.com
-```
-
-**Test the installation:**
-
-```bash
-isaacsim isaacsim.exp.full.kit
-```
-
-> **Note:** First launch can take 10+ minutes to cache dependencies.
-
-### Step 4: Clone Isaac Lab (Class Fork)
-
-```bash
-cd ~
-git clone git@github.com:vineetpasumarti/IsaacLab.git
-cd IsaacLab
-
-# Linux
-sudo apt install cmake build-essential
-./isaaclab.sh --install none
-
-# Windows
-isaaclab.bat --install none
-```
-
-**Test Isaac Lab:**
-
-```bash
-# Linux
-./isaaclab.sh -p scripts/tutorials/00_sim/create_empty.py
-
-# Windows
-isaaclab.bat -p scripts\tutorials\00_sim\create_empty.py
-```
-
-### Step 5: Clone Project Repository
-
-**Critical:** Project repo and Isaac Lab must be at the same directory level.
-
-```bash
-cd ~
-git clone git@github.com:Jirl-upenn/ese651_project.git
-```
-
-### Step 6: Set Up Weights & Biases (wandb)
-
-```bash
-pip install wandb
-wandb login
-```
-
-Enter your API key when prompted. Create a free account at https://wandb.ai if needed.
-
----
-
-## 💻 Usage
-
-### Training
-
-```bash
-cd ~/ese651_project
-
-python scripts/rsl_rl/train_race.py \
-    --task Isaac-Quadcopter-Race-v0 \
-    --num_envs 8192 \
-    --max_iterations 5000 \
-    --headless \
-    --logger wandb
-```
-
-**Arguments:**
-- `--task`: Environment name (fixed)
-- `--num_envs`: Number of parallel Isaac Sim environments (scale based on GPU memory)
-- `--max_iterations`: Total PPO update iterations (5000 ≈ 3 hrs on RTX 4090)
-- `--headless`: Run without GUI (faster training)
-- `--logger wandb`: Enable Weights & Biases logging
-
-Training checkpoints are saved to `logs/rsl_rl/quadcopter_direct/YYYY-MM-DD_HH-MM-SS/`.
-
-### Evaluation (Play Mode)
-
-```bash
-python scripts/rsl_rl/play_race.py \
-    --task Isaac-Quadcopter-Race-v0 \
-    --num_envs 1 \
-    --load_run 2025-11-15_14-30-22 \
-    --checkpoint best_model.pt \
-    --video \
-    --video_length 800
-```
-
-**Arguments:**
-- `--load_run`: Directory name from `logs/rsl_rl/quadcopter_direct/`
-- `--checkpoint`: Model file (e.g., `best_model.pt` or `model_5000.pt`)
-- `--video`: Record rollout video
-- `--video_length`: Number of timesteps to record
-
-Output video saved to `logs/rsl_rl/quadcopter_direct/YYYY-MM-DD_HH-MM-SS/videos/`.
-
-### Monitoring Training
-
-Open your wandb dashboard at https://wandb.ai/YOUR_USERNAME/ese651_drone_racing to view:
-- Episode reward curves
-- Gate pass rates
-- Policy loss / value loss / entropy
-- Learning rate schedule
-- Lap-time statistics
 
 ---
 
@@ -781,39 +633,7 @@ ese651_project/
 
 ## 🧮 Key Algorithms
 
-### 1. PPO Surrogate Loss with Clipping
-
-**Input:** Batch of (observations, actions, advantages, old log-probs)  
-**Output:** Policy gradient estimate
-
-**Objective:**
-
-```
-L^CLIP(θ) = E [ min(r(θ) Â, clip(r(θ), 1−ε, 1+ε) Â) ]
-
-where:
-  r(θ) = exp(log π_θ(a|s) − log π_old(a|s))
-  ε = 0.2
-```
-
-**Pseudocode:**
-
-```python
-# Compute new log probabilities
-log_probs_new = actor.get_log_prob(batch_actions)
-
-# Probability ratio
-ratios = torch.exp(log_probs_new - batch_old_log_probs)
-
-# Surrogate losses
-surr1 = ratios * batch_advantages
-surr2 = torch.clamp(ratios, 1 - clip_param, 1 + clip_param) * batch_advantages
-
-# Take the minimum (pessimistic bound)
-actor_loss = -torch.min(surr1, surr2).mean()
-```
-
-### 2. Gate-Passing Detection
+### 1. Gate-Passing Detection
 
 **Input:** Drone position p_t, gate position w_i, gate orientation q_i  
 **Output:** Boolean gate_passed
@@ -833,7 +653,7 @@ within_bounds = (torch.abs(y_g) < 0.6) & (torch.abs(z_g) < 0.6)
 gate_passed = was_behind & crossed_plane & within_bounds
 ```
 
-### 3. GAE (Generalized Advantage Estimation)
+### 2. GAE (Generalized Advantage Estimation)
 
 **Input:** Rewards r_t, values V(s_t), dones d_t  
 **Output:** Advantage estimates Â_t
@@ -869,7 +689,7 @@ for t in reversed(range(len(rewards))):
 advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 ```
 
-### 4. Adaptive KL-Divergence Scheduling
+### 3. Adaptive KL-Divergence Scheduling
 
 **Input:** Old policy parameters θ_old, new policy parameters θ  
 **Output:** Updated learning rate
@@ -941,15 +761,6 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 
 **Lesson:** Entropy regularisation should be minimal (0.001–0.01) for continuous control tasks. Exploration is primarily driven by stochastic policy sampling, not entropy bonuses.
 
-### 5. Image-Based Observations
-
-An experiment added a 64×64 RGB camera feed to the observation space. This:
-- **Increased training time 5×** due to convolutional encoder overhead
-- **Degraded final performance** (lap time: 28 s vs 20.5 s)
-- **Overfitted to visual artifacts** (lighting, shadows) rather than geometric structure
-
-**Lesson:** For structured tasks with known geometry, low-dimensional state observations (positions, velocities) vastly outperform vision-based policies.
-
 ---
 
 ## 📚 Lessons Learned
@@ -1010,18 +821,12 @@ An experiment added a 64×64 RGB camera feed to the observation space. This:
 
 ### Short-Term
 
-1. **Visual Servo for Gate Alignment**
-   ```python
-   # Add gate center in image coordinates as observation
-   gate_pixel_u, gate_pixel_v = project_3d_to_image(gate_pos_camera)
-   obs_visual = [gate_pixel_u, gate_pixel_v, gate_visible]
-   ```
 
-2. **Explicit Trajectory Waypoints**
+1. **Explicit Trajectory Waypoints**
    - Pre-compute minimum-time spline through gates
    - Add cross-track error penalty to encourage spline-following
 
-3. **Multi-Lap Curriculum**
+2. **Multi-Lap Curriculum**
    ```python
    # Progressively increase lap count during training
    if episode_count > 1000:
@@ -1036,28 +841,9 @@ An experiment added a 64×64 RGB camera feed to the observation space. This:
    - Use PPO policy for low-level control
    - Add MPC planner for high-level gate sequencing and collision avoidance
 
-5. **Sim-to-Real Transfer**
-   - Deploy policy on real Crazyflie 2.1 hardware
-   - Use onboard camera + IMU for state estimation
-   - Fine-tune via online RL (e.g., SAC) on real robot
-
 6. **Multi-Agent Racing**
    - Extend to 2+ drones racing simultaneously
    - Add collision avoidance and overtaking strategies
-
-### Long-Term
-
-7. **End-to-End Vision-Based Policy**
-   - Replace state-based observations with RGB-D camera input
-   - Use contrastive learning (e.g., CURL, DrQ-v2) for visual feature extraction
-
-8. **Meta-Learning for Rapid Adaptation**
-   - Train meta-policy via MAML or RL² on distribution of tracks
-   - Enable zero-shot transfer to novel gate configurations
-
-9. **Hierarchical RL for Complex Manoeuvres**
-   - High-level policy: gate sequencing + waypoint selection
-   - Low-level policy: trajectory tracking + stabilisation
 
 ---
 
@@ -1086,9 +872,9 @@ An experiment added a 64×64 RGB camera feed to the observation space. This:
 
 ## 🙏 Acknowledgments
 
-- **ESE 6510 Teaching Staff (Vineet Pasumarti)** — for the project infrastructure, Isaac Lab fork, and extensive troubleshooting support
+- **ESE 6510 Teaching Staff** — for the project infrastructure, Isaac Lab fork, and extensive troubleshooting support
 - **University of Pennsylvania** — for GPU cluster access and compute resources
-- **Team Members** — Kartik Virmani and Dhyey Shah — for collaborative reward tuning, PPO debugging, and late-night hyperparameter sweeps
+- **Team Members** — for collaborative reward tuning, PPO debugging, and late-night hyperparameter sweeps
 - **NVIDIA Isaac Sim Team** — for the high-fidelity physics simulator and GPU-accelerated environments
 - **ETH Zurich RSL Lab** — for the rsl_rl reinforcement learning library
 - **Fellow ESE 6510 students** — for peer discussion, leaderboard competition, and shared insights on reward design
@@ -1117,10 +903,3 @@ An experiment added a 64×64 RGB camera feed to the observation space. This:
 </div>
 
 ---
-
-## 📄 License
-
-Developed for educational purposes as part of ESE 6510 at the University of Pennsylvania.
-
-**Team**: Kartik Virmani, Dhyey Shah  
-*Fall 2025*
