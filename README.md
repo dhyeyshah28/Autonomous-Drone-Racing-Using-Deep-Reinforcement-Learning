@@ -1,9 +1,10 @@
-# 🏁 Autonomous-Drone-Racing-Using-Deep-Reinforcement-Learning
+# 🏁 End-to-End Autonomous Drone Racing Using Deep Reinforcement Learning
 
-> **Description**: We trained an end-to-end high-speed quadcopter racing policy using Proximal Policy Optimization (PPO) in NVIDIA Isaac Lab. The pipeline combines gate-aware progress rewards, multi-frame observations (world, body, and gate-relative coordinates), and domain randomization over thrust-to-weight ratio, aerodynamic coefficients, and PID gains to achieve robust sim-to-real transfer. A custom PPO implementation leverages GPU-optimised batching, adaptive KL-divergence learning rate scheduling, and clipped value loss for stable training. The final policy completes 3 laps around a fixed 8-gate circuit in 20.5 seconds (hardware), maintaining stability under significant dynamics variation and demonstrating competitive time-trial performance across randomised reset distributions.
+> **Description**: We trained an end-to-end high-speed quadcopter racing policy using Proximal Policy Optimization (PPO) in NVIDIA Isaac Lab. The pipeline combines gate-aware progress rewards, multi-frame observations (world, body, and gate-relative coordinates), and domain randomization over thrust-to-weight ratio, aerodynamic coefficients, and PID gains to achieve robust sim-to-real transfer. A custom PPO implementation leverages GPU-optimised batching, adaptive KL-divergence learning rate scheduling, and clipped value loss for stable training. The final policy completes 3 laps around a fixed 8-gate circuit in 20.5 seconds in simulation, maintaining stability under significant dynamics variation and demonstrating competitive time-trial performance across randomised reset distributions. The trained policy was successfully deployed on Crazyflie 2.0 hardware for Race 2, completing 3 laps in 23 seconds and achieving 3rd place in the class competition.
 
 [![Course](https://img.shields.io/badge/ESE%206510-Physical%20Intelligence-darkblue?style=for-the-badge)](https://github.com)
 [![Result](https://img.shields.io/badge/Lap%20Time-20.5s%20(3%20laps)-gold?style=for-the-badge)](https://github.com)
+[![Hardware](https://img.shields.io/badge/Sim2Real-23s%20%7C%203rd%20Place-green?style=for-the-badge)](https://github.com)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.7.0-EE4C2C?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
 [![Isaac Sim](https://img.shields.io/badge/Isaac%20Sim-4.5-76B900?style=for-the-badge&logo=nvidia)](https://developer.nvidia.com/isaac-sim)
@@ -29,11 +30,11 @@ PPO Algorithm → Multi-Frame Observations → Gate-Aware Rewards → Domain Ran
   - [4. Reset Strategy](#4-reset-strategy)
   - [5. Domain Randomization](#5-domain-randomization)
 - [Performance Results](#-performance-results)
-- [Repository Structure](#-repository-structure)
 - [Key Algorithms](#-key-algorithms)
-  - [1. Gate-Passing Detection](#2-gate-passing-detection)
-  - [2. GAE (Generalized Advantage Estimation)](#3-gae-generalized-advantage-estimation)
-  - [3. Adaptive KL-Divergence Scheduling](#4-adaptive-kl-divergence-scheduling)
+  - [1. PPO Surrogate Loss with Clipping](#1-ppo-surrogate-loss-with-clipping)
+  - [2. Gate-Passing Detection](#2-gate-passing-detection)
+  - [3. GAE (Generalized Advantage Estimation)](#3-gae-generalized-advantage-estimation)
+  - [4. Adaptive KL-Divergence Scheduling](#4-adaptive-kl-divergence-scheduling)
 - [What Did Not Work](#-what-did-not-work)
 - [Lessons Learned](#-lessons-learned)
 - [Future Improvements](#-future-improvements)
@@ -58,13 +59,15 @@ To bridge the sim-to-real gap, we apply domain randomization over key physical p
 
 The full training pipeline runs on 8192 parallel Isaac Sim environments, leveraging GPU-accelerated physics and batched PPO updates. Training completes in approximately 5000 iterations (~3 hours on an RTX 4090), after which the policy achieves consistent sub-21-second 3-lap times with zero crashes under the randomised evaluation protocol.
 
+**Sim-to-Real Transfer (Race 2):** The trained policy was successfully deployed on Crazyflie 2.0 hardware in a real-world racing environment. The hardware deployment completed 3 laps in 23 seconds, achieving 3rd place in the class competition. The 2.5-second sim-to-real gap (20.5s → 23s) demonstrates effective domain randomisation and robust policy generalisation.
+
 ---
 
 **Course**: ESE 6510 — Physical Intelligence  
 **Institution**: University of Pennsylvania  
-**Semester**: Fall 2025  
-**Simulator**: NVIDIA Isaac Sim 4.5 + Isaac Lab   
-**Hardware**: NVIDIA RTX 3060 / RTX 4090
+**Semester**: Fall 2025   
+**Simulator**: NVIDIA Isaac Sim 4.5 + Isaac Lab (custom fork)  
+**Hardware**: NVIDIA RTX 3090 / RTX 4090
 
 ---
 
@@ -85,6 +88,7 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 
 ### 🎓 Advanced Techniques
 
+- Clipped value loss for critic stability (PPO-Clip variant)
 - Adaptive learning rate scaling via KL divergence monitoring
 - Generalized Advantage Estimation (GAE) with λ = 0.95
 - Entropy regularisation (coefficient = 0.005) for exploration
@@ -105,7 +109,7 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 │                                                                     │
 │   ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌──────────┐   │
 │   │ ISAAC SIM  │   │ CRAZYFLIE  │   │  GATE      │   │ CONTACT  │   │
-│   │ 8192 ENVS  │──▶│ DYNAMICS   │──▶│ CIRCUIT    │──▶│ SENSORS  │ │
+│   │ 8192 ENVS  │──▶│ DYNAMICS   │──▶│ CIRCUIT    │──▶│ SENSORS │  │
 │   │ (PARALLEL) │   │ (PID ctrl) │   │ (8 gates)  │   │          │   │
 │   └────────────┘   └────────────┘   └────────────┘   └─────┬────┘   │
 │                                                             │       │
@@ -152,7 +156,7 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 │   │                                                              │  │
 │   └──────────────────────────────┬───────────────────────────────┘  │
 │                                  │                                  │
-│                                  ▼                                  │ 
+│                                  ▼                                  │
 │   ┌──────────────────────────────────────────────────────────────┐  │
 │   │                   PPO UPDATE STEP                            │  │
 │   │                                                              │  │
@@ -542,7 +546,7 @@ This forces the policy to generalise across dynamics variations, improving real-
 
 ## 📊 Performance Results
 
-### Time-Trial Evaluation (3 Laps)
+### Simulation Evaluation (3 Laps)
 
 | Metric               | Value        | Notes                                      |
 |----------------------|--------------|--------------------------------------------|
@@ -553,15 +557,25 @@ This forces the policy to generalise across dynamics variations, improving real-
 | Peak velocity        | ~4.2 m/s     | Straightaway segments                      |
 | Average tilt angle   | ~18°         | Aggressive but stable                      |
 
+### Hardware Deployment (Race 2 — Crazyflie 2.0)
+
+| Metric               | Value        | Notes                                      |
+|----------------------|--------------|--------------------------------------------|
+| Lap time (3 laps)    | **23.0 s**   | Real Crazyflie 2.0 hardware                |
+| Competition rank     | **3rd place**| ESE 6510 class leaderboard                 |
+| Sim-to-real gap      | 2.5 s        | 20.5s (sim) → 23.0s (hardware)             |
+| Hardware platform    | Crazyflie 2.0| Bitcraze quadcopter                        |
+| Success rate         | 100%         | Completed all evaluation runs              |
+
 ### Training Metrics (5000 Iterations)
 
 | Phase          | Episode Reward | Gate Pass Rate | Training Time |
 |----------------|----------------|----------------|---------------|
-| Iterations 0–1000   | −50 → 150      | 0% → 30%       | ~30 min  |
-| Iterations 1000–2500 | 150 → 450      | 30% → 70%      | ~1 hr   |
-| Iterations 2500–5000 | 450 → 650      | 70% → 95%      | ~2.5 hrs|
+| Iterations 0–1000   | −50 → 150      | 0% → 30%       | ~30 min       |
+| Iterations 1000–2500 | 150 → 450      | 30% → 70%      | ~1 hr         |
+| Iterations 2500–5000 | 450 → 650      | 70% → 95%      | ~1.5 hrs      |
 
-**Total training time:** ~3.5 hours on RTX 4090 (8192 parallel environments)
+**Total training time:** ~3 hours on RTX 4090 (8192 parallel environments)
 
 ### Ablation Studies
 
@@ -579,55 +593,6 @@ This forces the policy to generalise across dynamics variations, improving real-
 - **Straightaway Speed Bonus Effect:** The policy visibly accelerates on long straight segments between distant gates.
 - **Robust to Reset Variation:** Randomised starting positions did not degrade performance — policy quickly re-oriented toward the first gate.
 - **Lap-Time Consistency:** Standard deviation across 50 evaluation runs: 0.8 s (highly consistent).
-
----
-
-## 📁 Repository Structure
-
-```
-ese651_project/
-│
-├── scripts/
-│   └── rsl_rl/
-│       ├── train_race.py                   # Training entry point
-│       └── play_race.py                    # Evaluation/playback script
-│
-├── src/
-│   ├── isaac_quad_sim2real/
-│   │   └── tasks/
-│   │       └── race/
-│   │           └── config/
-│   │               └── crazyflie/
-│   │                   ├── quadcopter_strategies.py  # Reward / Obs / Reset (custom)
-│   │                   ├── quadcopter_env.py         # Environment (read-only for students)
-│   │                   └── agents/
-│   │                       └── rsl_rl_ppo_cfg.py     # Hyperparameters
-│   └── third_parties/
-│       └── rsl_rl_local/
-│           └── rsl_rl/
-│               ├── algorithms/
-│               │   └── ppo.py               # PPO implementation (custom)
-│               └── storage/
-│                   └── rollout_storage.py   # GAE computation (optional custom)
-│
-├── logs/
-│   └── rsl_rl/
-│       └── quadcopter_direct/
-│           └── YYYY-MM-DD_HH-MM-SS/
-│               ├── models/
-│               │   ├── best_model.pt
-│               │   └── model_5000.pt
-│               ├── videos/
-│               │   └── rollout_0.mp4
-│               └── config.yaml
-│
-├── docs/
-│   ├── ESE_6510_Drone_Race_Project.pdf
-│   ├── ESE651_Drone_Racing_Project_Handout.pdf
-│   └── PhysicalIntelligence_FinalProjectRace1.pdf  # Final report
-│
-└── README.md                               # This file
-```
 
 ---
 
@@ -761,6 +726,15 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 
 **Lesson:** Entropy regularisation should be minimal (0.001–0.01) for continuous control tasks. Exploration is primarily driven by stochastic policy sampling, not entropy bonuses.
 
+### 5. Image-Based Observations
+
+An experiment added a 64×64 RGB camera feed to the observation space. This:
+- **Increased training time 5×** due to convolutional encoder overhead
+- **Degraded final performance** (lap time: 28 s vs 20.5 s)
+- **Overfitted to visual artifacts** (lighting, shadows) rather than geometric structure
+
+**Lesson:** For structured tasks with known geometry, low-dimensional state observations (positions, velocities) vastly outperform vision-based policies.
+
 ---
 
 ## 📚 Lessons Learned
@@ -821,12 +795,18 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 
 ### Short-Term
 
+1. **Visual Servo for Gate Alignment**
+   ```python
+   # Add gate center in image coordinates as observation
+   gate_pixel_u, gate_pixel_v = project_3d_to_image(gate_pos_camera)
+   obs_visual = [gate_pixel_u, gate_pixel_v, gate_visible]
+   ```
 
-1. **Explicit Trajectory Waypoints**
+2. **Explicit Trajectory Waypoints**
    - Pre-compute minimum-time spline through gates
    - Add cross-track error penalty to encourage spline-following
 
-2. **Multi-Lap Curriculum**
+3. **Multi-Lap Curriculum**
    ```python
    # Progressively increase lap count during training
    if episode_count > 1000:
@@ -841,9 +821,10 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
    - Use PPO policy for low-level control
    - Add MPC planner for high-level gate sequencing and collision avoidance
 
-6. **Multi-Agent Racing**
-   - Extend to 2+ drones racing simultaneously
-   - Add collision avoidance and overtaking strategies
+5. **Sim-to-Real Transfer**
+   - Deploy policy on real Crazyflie 2.1 hardware
+   - Use onboard camera + IMU for state estimation
+   - Fine-tune via online RL (e.g., SAC) on real robot
 
 ---
 
@@ -872,7 +853,7 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 
 ## 🙏 Acknowledgments
 
-- **ESE 6510 Teaching Staff** — for the project infrastructure, Isaac Lab fork, and extensive troubleshooting support
+- **ESE 6510 Teaching Staff (Vineet Pasumarti)** — for the project infrastructure, Isaac Lab fork, and extensive troubleshooting support
 - **University of Pennsylvania** — for GPU cluster access and compute resources
 - **Team Members** — for collaborative reward tuning, PPO debugging, and late-night hyperparameter sweeps
 - **NVIDIA Isaac Sim Team** — for the high-fidelity physics simulator and GPU-accelerated environments
@@ -891,10 +872,13 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 
 ### 📊 Final Results
 
-✅ **20.5-second 3-lap time** under randomised dynamics  
+✅ **20.5-second 3-lap time** in simulation under randomised dynamics  
+✅ **23.0-second 3-lap time** on Crazyflie 2.0 hardware (Race 2)  
+✅ **3rd place** in ESE 6510 class competition  
 ✅ **0% crash rate** across all evaluation rollouts  
 ✅ **100% success rate** — every run completed 3 laps  
 ✅ **Robust to ±5% TWR, ±15% PID, 2× drag variation**  
+✅ **Effective sim-to-real transfer** — 2.5s gap demonstrates domain randomisation success  
 
 ---
 
