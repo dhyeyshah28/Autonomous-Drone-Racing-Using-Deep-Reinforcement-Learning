@@ -11,6 +11,12 @@
 
 <div align="center">
 
+<p float="left">
+  <img src="Images/hover.png" alt="Block Detection Simulation" width="22%" />
+  <img src="Images/rl.png" alt="Block Detection Hardware" width="20%" />
+</p>
+</div>
+
 **Full Training Pipeline:**
 PPO Algorithm → Multi-Frame Observations → Gate-Aware Rewards → Domain Randomization → Time-Trial Racing
 
@@ -226,6 +232,15 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 ---
 
 ## 🔬 Technical Approach
+
+<div align="center">
+
+<p float="left">
+  <img src="Images/track.png" alt="Block Detection Simulation" width="22%" />
+  <img src="Images/results.png" alt="Block Detection Hardware" width="20%" />
+</p>
+</div>
+
 
 ### 1. Proximal Policy Optimization (PPO)
 
@@ -725,15 +740,6 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 
 **Lesson:** Entropy regularisation should be minimal (0.001–0.01) for continuous control tasks. Exploration is primarily driven by stochastic policy sampling, not entropy bonuses.
 
-### 5. Image-Based Observations
-
-An experiment added a 64×64 RGB camera feed to the observation space. This:
-- **Increased training time 5×** due to convolutional encoder overhead
-- **Degraded final performance** (lap time: 28 s vs 20.5 s)
-- **Overfitted to visual artifacts** (lighting, shadows) rather than geometric structure
-
-**Lesson:** For structured tasks with known geometry, low-dimensional state observations (positions, velocities) vastly outperform vision-based policies.
-
 ---
 
 ## 📚 Lessons Learned
@@ -760,29 +766,17 @@ An experiment added a 64×64 RGB camera feed to the observation space. This:
    - Randomising thrust-to-weight ratio and PID gains prevented overfitting to nominal dynamics.
    - Policy remained stable under ±5% TWR, ±15% PID, and 2× aerodynamic drag variation.
 
-6. **Adaptive KL-Divergence Scheduling**
-   - Learning rate automatically adjusted based on policy update magnitude.
-   - Prevented destructively large updates late in training while allowing fast initial learning.
-
 ### ⚠️ Challenges Encountered
 
-1. **Reward Scale Tuning is Critical**
+1. **Reward Scale Tuning was Critical**
    - Small changes in reward weights (e.g., w_g: 5 → 10) dramatically affected policy behavior.
    - **Lesson:** Use wandb to visualise per-component reward contributions and iteratively balance scales.
 
-2. **Gate-Passing Detection Required Hysteresis**
-   - Naive plane-crossing checks triggered false positives when the drone oscillated near the gate.
-   - **Lesson:** Track previous frame's position (was_behind_gate) to implement one-shot pass detection.
-
-3. **Tilt Penalty Threshold Matters**
+2. **Tilt Penalty Threshold**
    - Setting p_tilt = clip(T − 0.8, 0, 2) allowed moderate aggressive banking (~45°) while penalising extreme tilt.
    - Too strict (threshold = 0.3) forced overly conservative flight; too loose (threshold = 1.5) caused crashes.
 
-4. **100-Timestep Grace Period Essential**
-   - Crash penalty on initial timesteps prevented the policy from learning takeoff.
-   - **Lesson:** Delay penalty application until the drone has stabilised after reset.
-
-5. **Parallel Environment Count Trades Off Speed vs Memory**
+3. **Parallel Environment Count Trades Off Speed vs Memory**
    - 8192 envs: 3 hrs training (RTX 4090, 24 GB VRAM)
    - 4096 envs: 5 hrs training (RTX 3090, 24 GB VRAM)
    - 2048 envs: 10 hrs training (RTX 3080, 10 GB VRAM)
