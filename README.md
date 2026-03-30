@@ -12,7 +12,7 @@
 <div align="center">
 
 <p float="left">
-  <img src="Images/hover.png" alt="Block Detection Simulation" width="44%" />
+  <img src="Images/hover.png" alt="Block Detection Simulation" width="46%" />
   <img src="Images/rl.png" alt="Block Detection Hardware" width="40%" />
 </p>
 </div>
@@ -236,8 +236,8 @@ The full training pipeline runs on 8192 parallel Isaac Sim environments, leverag
 <div align="center">
 
 <p float="left">
-  <img src="Images/track.jpeg" alt="Block Detection Simulation" width="42%" />
-  <img src="Images/results.png" alt="Block Detection Hardware" width="40%" />
+  <img src="Images/track.jpeg" alt="Block Detection Simulation" width="22%" />
+  <img src="Images/results.png" alt="Block Detection Hardware" width="50%" />
 </p>
 </div>
 
