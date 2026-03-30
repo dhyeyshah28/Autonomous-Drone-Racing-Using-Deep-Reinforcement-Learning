@@ -837,17 +837,11 @@ Increasing the entropy bonus 10× (from 0.005 to 0.05) to encourage exploration 
 7. RSL-RL: Robot Learning Library (ETH Zurich). https://github.com/leggedrobotics/rsl_rl
 8. Weights & Biases (wandb) Documentation. https://docs.wandb.ai/
 
-### Course Materials
-
-9. ESE 6510 Lecture Notes — Physical Intelligence, University of Pennsylvania, Fall 2025
-10. ESE 6510 Drone Racing Project Handout, October 2025
-
 ---
 
 ## 🙏 Acknowledgments
 
-- **ESE 6510 Teaching Staff (Vineet Pasumarti)** — for the project infrastructure, Isaac Lab fork, and extensive troubleshooting support
-- **University of Pennsylvania** — for GPU cluster access and compute resources
+- **ESE 6510 Teaching Staff** — for the project infrastructure, Isaac Lab fork, and extensive troubleshooting support
 - **Team Members** — for collaborative reward tuning, PPO debugging, and late-night hyperparameter sweeps
 - **NVIDIA Isaac Sim Team** — for the high-fidelity physics simulator and GPU-accelerated environments
 - **ETH Zurich RSL Lab** — for the rsl_rl reinforcement learning library
